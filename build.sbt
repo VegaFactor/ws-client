@@ -8,10 +8,17 @@ val scala32 = "3.2.2"
 ThisBuild / description := "Generic WebServices library currently only with Play WS impl./backend"
 
 ThisBuild / organization := "io.cequence"
-ThisBuild / scalaVersion := scala212
-ThisBuild / version := "0.7.2"
+ThisBuild / scalaVersion := scala213
+ThisBuild / version := "0.7.2-1"
 ThisBuild / isSnapshot := false
 ThisBuild / crossScalaVersions := List(scala212, scala213, scala32)
+
+ThisBuild / resolvers ++= Seq(
+  Resolver.githubPackages("VegaFactor")
+)
+ThisBuild / githubOwner       := "VegaFactor"
+ThisBuild / githubRepository  := "openai-scala-client"
+ThisBuild / githubTokenSource := TokenSource.Environment("GITHUB_TOKEN") || TokenSource.GitConfig("github.token")
 
 // POM settings for Sonatype
 ThisBuild / homepage := Some(
