@@ -39,7 +39,7 @@ private trait PlayWSStreamClientEngine
   private val defaultItemPrefix = "data: "
   private val endOfStreamToken = "[DONE]"
   private val maxPrefixOffset = 3 // how many characters can be before the "data: " prefix
-  protected val defaultMaxFrameLength = 5000
+  protected val defaultMaxFrameLength = 20000
 
   private def jsonMarshaller(
     itemAnyPrefix: String = defaultItemPrefix,
