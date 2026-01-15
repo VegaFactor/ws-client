@@ -9,9 +9,17 @@ ThisBuild / description := "Generic WebServices library currently only with Play
 
 ThisBuild / organization := "io.cequence"
 ThisBuild / scalaVersion := scala213
-ThisBuild / version := "0.7.3"
+ThisBuild / version := "0.7.3-1"
 ThisBuild / isSnapshot := false
 ThisBuild / crossScalaVersions := List(scala212, scala213, scala32)
+
+ThisBuild / resolvers ++= Seq(
+  Resolver.githubPackages("VegaFactor")
+)
+ThisBuild / githubOwner       := "VegaFactor"
+ThisBuild / githubRepository  := "openai-scala-client"
+ThisBuild / githubTokenSource := TokenSource.Environment("GITHUB_TOKEN") || TokenSource.GitConfig("github.token")
+
 
 // POM settings for Sonatype
 ThisBuild / homepage := Some(
