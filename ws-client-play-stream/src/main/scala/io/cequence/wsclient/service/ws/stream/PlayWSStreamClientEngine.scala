@@ -38,6 +38,7 @@ private trait PlayWSStreamClientEngine
 
   private val defaultItemPrefix = "data: "
   private val endOfStreamToken = "[DONE]"
+  private val emptyArrays = Seq("[]", "[ ]")
   private val maxPrefixOffset = 3 // how many characters can be before the "data: " prefix
   protected val defaultMaxFrameLength = 20000
 
@@ -45,13 +46,16 @@ private trait PlayWSStreamClientEngine
     itemAnyPrefix: String = defaultItemPrefix,
     stripPrefix: Option[String],
     stripSuffix: Option[String]
-  ): Unmarshaller[ByteString, JsValue] =
-    Unmarshaller.strict[ByteString, JsValue] { byteString =>
-      val string = byteString.utf8String
+  ): Unmarshaller[ByteString, Option[JsValue]] =
+    Unmarshaller.strict[ByteString, Option[JsValue]] { byteString =>
+      val string = byteString.utf8String.trim
 
       logger.debug(s"Unmarshalling JSON: $string")
 
-      try {
+      if (string.isEmpty || emptyArrays.contains(string)) {
+        None
+      }
+      else try {
         val itemStartIndex = string.indexOf(itemAnyPrefix)
 
         val data =
@@ -61,11 +65,11 @@ private trait PlayWSStreamClientEngine
             string
 
         if (data.equals(endOfStreamToken))
-          JsString(endOfStreamToken)
+          Some(JsString(endOfStreamToken))
         else {
           val strippedData =
             data.stripPrefix(stripPrefix.getOrElse("")).stripSuffix(stripSuffix.getOrElse(""))
-          Json.parse(strippedData)
+          Some(Json.parse(strippedData))
         }
 
       } catch {
@@ -151,7 +155,7 @@ private trait PlayWSStreamClientEngine
     extraHeaders: Seq[(String, String)],
     framing: Flow[ByteString, ByteString, NotUsed]
   )(
-    implicit um: Unmarshaller[ByteString, T],
+    implicit um: Unmarshaller[ByteString, Option[T]],
     materializer: Materializer
   ): Source[T, NotUsed] =
     execRawStream(
@@ -161,7 +165,9 @@ private trait PlayWSStreamClientEngine
       params,
       bodyParams,
       extraHeaders
-    ).via(framing).mapAsync(1)(bytes => Unmarshal(bytes).to[T]) // unmarshal one by one
+    ).via(framing)
+      .mapAsync(1)(bytes => Unmarshal(bytes).to[Option[T]]) // unmarshal one by one
+      .collect { case Some(value) => value } // filter out None values
 
   override def execRawStream(
     endPoint: String,
